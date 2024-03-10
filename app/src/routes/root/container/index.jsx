@@ -1,4 +1,46 @@
+import { Link, Outlet, useLoaderData, Form, redirect } from 'react-router-dom';
+import { getContacts, createContact } from '../../../utils/contact';
+import { Fragment } from 'react';
+
+export const loader = async () => {
+	const contacts = await getContacts();
+	return { contacts };
+};
+
+export const action = async () => {
+	const contact = await createContact();
+	return redirect(`/contacts/${contact.id}/edit`);
+};
+
 export const Root = () => {
+	const { contacts } = useLoaderData();
+
+	const contactList = contacts?.length ? (
+		<ul>
+			{contacts?.map((contact) => {
+				return (
+					<li key={contact?.id}>
+						<Link to={`contacts/${contact?.id}`}>
+							{contact?.first || contact?.last ? (
+								<Fragment>
+									{contact?.first} {contact?.last}
+								</Fragment>
+							) : (
+								<Fragment>
+									<i>No Name</i>
+								</Fragment>
+							)}
+							{contact?.favorite && <span>★</span>}
+						</Link>
+					</li>
+				);
+			})}
+		</ul>
+	) : (
+		<p>
+			<i>No contacts</i>
+		</p>
+	);
 	return (
 		<>
 			<div id='sidebar'>
@@ -15,22 +57,15 @@ export const Root = () => {
 						<div id='search-spinner' aria-hidden hidden={true} />
 						<div className='sr-only' aria-live='polite'></div>
 					</form>
-					<form method='post'>
+					<Form method='post'>
 						<button type='submit'>New</button>
-					</form>
+					</Form>
 				</div>
-				<nav>
-					<ul>
-						<li>
-							<a href={`/contacts/1`}>Your Name</a>
-						</li>
-						<li>
-							<a href={`/contacts/2`}>Your Friend</a>
-						</li>
-					</ul>
-				</nav>
+				<nav>{contactList}</nav>
 			</div>
-			<div id='detail'></div>
+			<div id='detail'>
+				<Outlet />
+			</div>
 		</>
 	);
 };
