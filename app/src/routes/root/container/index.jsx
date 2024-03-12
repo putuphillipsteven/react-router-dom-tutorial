@@ -1,10 +1,21 @@
-import { Link, Outlet, useLoaderData, Form, redirect, NavLink } from 'react-router-dom';
+import {
+	Link,
+	Outlet,
+	useLoaderData,
+	Form,
+	redirect,
+	NavLink,
+	useNavigation,
+	useSubmit,
+} from 'react-router-dom';
 import { getContacts, createContact } from '../../../utils/contact';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 
-export const loader = async () => {
-	const contacts = await getContacts();
-	return { contacts };
+export const loader = async ({ request }) => {
+	const url = new URL(request.url);
+	const q = url.searchParams.get('q') || '';
+	const contacts = await getContacts(q);
+	return { contacts, q };
 };
 
 export const action = async () => {
@@ -13,7 +24,14 @@ export const action = async () => {
 };
 
 export const Root = () => {
-	const { contacts } = useLoaderData();
+	const { contacts, q } = useLoaderData();
+	const [query, setQuery] = useState(q);
+	const navigation = useNavigation();
+	const submit = useSubmit();
+
+	useEffect(() => {
+		setQuery(q);
+	}, [q]);
 
 	const contactList = contacts?.length ? (
 		<ul>
@@ -51,24 +69,29 @@ export const Root = () => {
 			<div id='sidebar'>
 				<h1>React Router Contacts</h1>
 				<div>
-					<form id='search-form' role='search'>
+					<Form id='search-form' role='search'>
 						<input
 							id='q'
 							aria-label='Search contacts'
 							placeholder='Search'
 							type='search'
 							name='q'
+							value={query}
+							onChange={(e) => {
+								submit(e.currentTarget.form);
+							}}
 						/>
 						<div id='search-spinner' aria-hidden hidden={true} />
 						<div className='sr-only' aria-live='polite'></div>
-					</form>
+					</Form>
 					<Form method='post'>
 						<button type='submit'>New</button>
 					</Form>
 				</div>
 				<nav>{contactList}</nav>
 			</div>
-			<div id='detail'>
+			{console.log('navigation', navigation)}
+			<div id='detail' className={navigation.state === 'loading' ? 'loading' : ''}>
 				<Outlet />
 			</div>
 		</>
