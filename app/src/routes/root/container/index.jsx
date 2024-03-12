@@ -1,4 +1,4 @@
-import { Link, Outlet, useLoaderData, Form, redirect } from 'react-router-dom';
+import { Link, Outlet, useLoaderData, Form, redirect, NavLink } from 'react-router-dom';
 import { getContacts, createContact } from '../../../utils/contact';
 import { Fragment } from 'react';
 
@@ -20,7 +20,12 @@ export const Root = () => {
 			{contacts?.map((contact) => {
 				return (
 					<li key={contact?.id}>
-						<Link to={`contacts/${contact?.id}`}>
+						<NavLink
+							to={`contacts/${contact?.id}`}
+							className={({ isActive, isPending }) =>
+								isActive ? 'active' : isPending ? 'pending' : ''
+							}
+						>
 							{contact?.first || contact?.last ? (
 								<Fragment>
 									{contact?.first} {contact?.last}
@@ -31,7 +36,7 @@ export const Root = () => {
 								</Fragment>
 							)}
 							{contact?.favorite && <span>★</span>}
-						</Link>
+						</NavLink>
 					</li>
 				);
 			})}
